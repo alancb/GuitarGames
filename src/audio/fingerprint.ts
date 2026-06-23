@@ -160,7 +160,7 @@ function calculateStability(template: AudioFingerprint, samples: AudioFingerprin
 function buildTemplate(chordId: 0 | 1 | 2 | 3, draft: CalibrationDraftChord): ChordTemplate {
   const fingerprint = averageFingerprints(draft.samples);
   const stability = calculateStability(fingerprint, draft.samples);
-  const threshold = clamp(0.72 + stability * 0.2, 0.78, 0.94);
+  const threshold = clamp(0.69 + stability * 0.16, 0.74, 0.9);
 
   return {
     chordId,
@@ -181,12 +181,19 @@ export function createCalibrationProfile(drafts: CalibrationDraftChord[]): Calib
   );
   const averageLevel =
     templates.reduce((sum, template) => sum + template.fingerprint.level, 0) / templates.length;
+  const quietestTemplateLevel = Math.min(
+    ...templates.map((template) => template.fingerprint.level)
+  );
 
   return {
     version: 1,
     createdAt: new Date().toISOString(),
     debounceMs: 325,
-    noiseFloor: averageLevel * 0.34,
+    noiseFloor: Math.max(
+      quietestTemplateLevel * 0.16,
+      averageLevel * 0.12,
+      0.00075
+    ),
     templates
   };
 }

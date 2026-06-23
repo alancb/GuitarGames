@@ -70,7 +70,7 @@ describe("audio fingerprint helpers", () => {
     const profile = createCalibrationProfile(drafts);
 
     expect(profile.templates).toHaveLength(4);
-    expect(profile.templates.every((template) => template.threshold >= 0.78)).toBe(true);
+    expect(profile.templates.every((template) => template.threshold >= 0.74)).toBe(true);
     expect(profile.noiseFloor).toBeGreaterThan(0);
   });
 });

@@ -29,6 +29,30 @@ export class BrowserChordInput implements AudioInput {
   private source: MediaStreamAudioSourceNode | null = null;
   private stream: MediaStream | null = null;
 
+  private readFingerprint(): AudioFingerprint {
+    if (!this.context || !this.analyser) {
+      throw new Error("Microphone analyzer failed to initialize.");
+    }
+
+    return captureFingerprintFromAnalyser(
+      this.analyser,
+      this.context.sampleRate
+    );
+  }
+
+  private async measureBaseline(sampleCount = 6, intervalMs = 45): Promise<number> {
+    const levels: number[] = [];
+
+    for (let index = 0; index < sampleCount; index += 1) {
+      levels.push(this.readFingerprint().level);
+      await delay(intervalMs);
+    }
+
+    levels.sort((left, right) => left - right);
+    const median = levels[Math.floor(levels.length / 2)] ?? 0;
+    return Math.max(median, 0.00035);
+  }
+
   isSupported(): boolean {
     return Boolean(
       "mediaDevices" in navigator &&
@@ -70,7 +94,7 @@ export class BrowserChordInput implements AudioInput {
       this.source = this.context.createMediaStreamSource(this.stream);
       this.analyser = this.context.createAnalyser();
       this.analyser.fftSize = 4096;
-      this.analyser.smoothingTimeConstant = 0.72;
+      this.analyser.smoothingTimeConstant = 0.55;
       this.source.connect(this.analyser);
     }
   }
@@ -82,32 +106,54 @@ export class BrowserChordInput implements AudioInput {
       throw new Error("Microphone analyzer failed to initialize.");
     }
 
-    const samples: AudioFingerprint[] = [];
+    const baselineLevel = await this.measureBaseline();
+    const triggerLevel = Math.max(
+      baselineLevel * 2.1,
+      baselineLevel + 0.0016,
+      0.0016
+    );
+    const sustainLevel = Math.max(
+      baselineLevel * 1.4,
+      baselineLevel + 0.00075,
+      0.00095
+    );
     const startTime = performance.now();
-    let armed = false;
+    let peakLevel = baselineLevel;
 
-    while (performance.now() - startTime < 2800) {
-      const fingerprint = captureFingerprintFromAnalyser(
-        this.analyser,
-        this.context.sampleRate
-      );
+    while (performance.now() - startTime < 4200) {
+      const fingerprint = this.readFingerprint();
+      peakLevel = Math.max(peakLevel, fingerprint.level);
 
-      if (fingerprint.level > 0.0055) {
-        armed = true;
+      if (fingerprint.level >= triggerLevel) {
+        const burst: AudioFingerprint[] = [fingerprint];
+        const burstStart = performance.now();
+
+        while (performance.now() - burstStart < 420) {
+          await delay(45);
+          const nextFingerprint = this.readFingerprint();
+          peakLevel = Math.max(peakLevel, nextFingerprint.level);
+
+          if (nextFingerprint.level >= sustainLevel) {
+            burst.push(nextFingerprint);
+          }
+        }
+
+        if (burst.length >= 3) {
+          const strongestFrames = burst
+            .slice()
+            .sort((left, right) => right.level - left.level)
+            .slice(0, Math.min(6, burst.length));
+
+          return averageFingerprints(strongestFrames);
+        }
       }
 
-      if (armed && fingerprint.level > 0.0125) {
-        samples.push(fingerprint);
-      }
-
-      if (samples.length >= 5) {
-        return averageFingerprints(samples);
-      }
-
-      await delay(70);
+      await delay(45);
     }
 
-    throw new Error("No strong strum was detected. Move closer to the mic and try again.");
+    throw new Error(
+      `No clean strum was detected. Peak level reached ${peakLevel.toFixed(4)}. Try moving closer to the mic and let the chord ring a moment longer.`
+    );
   }
 
   createMonitor(
@@ -121,18 +167,22 @@ export class BrowserChordInput implements AudioInput {
     let stopped = false;
     let lastEmission = 0;
     let lastChord: number | null = null;
+    let ambientLevel = Math.max(profile.noiseFloor * 0.6, 0.00035);
 
     const intervalId = window.setInterval(() => {
       if (stopped || !this.context || !this.analyser) {
         return;
       }
 
-      const fingerprint = captureFingerprintFromAnalyser(
-        this.analyser,
-        this.context.sampleRate
+      const fingerprint = this.readFingerprint();
+      const gateLevel = Math.max(
+        profile.noiseFloor * 0.58,
+        ambientLevel * 1.75,
+        0.00085
       );
 
-      if (fingerprint.level < profile.noiseFloor) {
+      if (fingerprint.level < gateLevel) {
+        ambientLevel = ambientLevel * 0.88 + fingerprint.level * 0.12;
         return;
       }
 
@@ -152,10 +202,14 @@ export class BrowserChordInput implements AudioInput {
 
       const margin = bestMatch.confidence - (runnerUp?.confidence ?? 0);
       const now = Date.now();
+      const confidenceFloor = Math.max(
+        0.72,
+        bestMatch.template.threshold - 0.05
+      );
 
       if (
-        bestMatch.confidence < bestMatch.template.threshold ||
-        margin < 0.025 ||
+        bestMatch.confidence < confidenceFloor ||
+        margin < 0.015 ||
         (lastChord === bestMatch.template.chordId && now - lastEmission < profile.debounceMs)
       ) {
         return;
