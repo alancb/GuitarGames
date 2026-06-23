@@ -28,7 +28,8 @@ function toMagnitude(db: number): number {
 export function createFingerprintFromSpectrum(
   spectrumDb: Float32Array,
   sampleRate: number,
-  bandCount = DEFAULT_BAND_COUNT
+  bandCount = DEFAULT_BAND_COUNT,
+  levelOverride?: number
 ): AudioFingerprint {
   const nyquist = sampleRate / 2;
   const minIndex = Math.max(0, Math.floor((MIN_FREQUENCY / nyquist) * spectrumDb.length));
@@ -74,7 +75,7 @@ export function createFingerprintFromSpectrum(
   const spread = totalMagnitude > 0 ? Math.sqrt(spreadAccumulator / totalMagnitude) : 0;
   const dominantFrequency = (dominantIndex / spectrumDb.length) * nyquist;
   const normalizedBands = normalize(rawBands);
-  const level = totalMagnitude / relevantLength;
+  const level = levelOverride ?? totalMagnitude / relevantLength;
 
   return {
     bands: normalizedBands,
@@ -203,6 +204,15 @@ export function captureFingerprintFromAnalyser(
   sampleRate: number
 ): AudioFingerprint {
   const frequencyData = new Float32Array(analyser.frequencyBinCount);
+  const timeDomainData = new Float32Array(analyser.fftSize);
   analyser.getFloatFrequencyData(frequencyData);
-  return createFingerprintFromSpectrum(frequencyData, sampleRate);
+  analyser.getFloatTimeDomainData(timeDomainData);
+
+  let rmsAccumulator = 0;
+  for (const sample of timeDomainData) {
+    rmsAccumulator += sample * sample;
+  }
+
+  const rmsLevel = Math.sqrt(rmsAccumulator / timeDomainData.length);
+  return createFingerprintFromSpectrum(frequencyData, sampleRate, DEFAULT_BAND_COUNT, rmsLevel);
 }
