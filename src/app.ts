@@ -338,9 +338,13 @@ export class App {
                     <button
                       class="button button--secondary"
                       data-capture-index="${index}"
-                      ${this.calibrationBusyIndex !== null ? "disabled" : ""}
+                      ${this.calibrationBusyIndex !== null || chord.samples.length >= 3 ? "disabled" : ""}
                     >
-                      Capture Strum ${chord.samples.length + 1} / 3
+                      ${
+                        chord.samples.length >= 3
+                          ? "Captured 3 / 3"
+                          : `Capture Strum ${chord.samples.length + 1} / 3`
+                      }
                     </button>
                   </article>
                 `

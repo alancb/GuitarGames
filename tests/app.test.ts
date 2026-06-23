@@ -103,6 +103,9 @@ describe("app flow", () => {
         captureButtons()[chordIndex].click();
         await flushPromises();
       }
+
+      expect(captureButtons()[chordIndex].disabled).toBe(true);
+      expect(captureButtons()[chordIndex].textContent).toContain("Captured 3 / 3");
     }
 
     root.querySelector<HTMLButtonElement>('[data-action="finish"]')?.click();

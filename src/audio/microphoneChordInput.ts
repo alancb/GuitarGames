@@ -168,6 +168,7 @@ export class BrowserChordInput implements AudioInput {
     let lastEmission = 0;
     let lastChord: number | null = null;
     let ambientLevel = Math.max(profile.noiseFloor * 0.6, 0.00035);
+    let activeWindow: AudioFingerprint[] = [];
 
     const intervalId = window.setInterval(() => {
       if (stopped || !this.context || !this.analyser) {
@@ -183,13 +184,23 @@ export class BrowserChordInput implements AudioInput {
 
       if (fingerprint.level < gateLevel) {
         ambientLevel = ambientLevel * 0.88 + fingerprint.level * 0.12;
+        activeWindow = [];
         return;
       }
+
+      activeWindow = [...activeWindow.slice(-3), fingerprint];
+      const classificationFingerprint =
+        activeWindow.length >= 2
+          ? averageFingerprints(activeWindow)
+          : fingerprint;
 
       const ranked = profile.templates
         .map((template) => ({
           template,
-          confidence: fingerprintSimilarity(template.fingerprint, fingerprint)
+          confidence: fingerprintSimilarity(
+            template.fingerprint,
+            classificationFingerprint
+          )
         }))
         .sort((left, right) => right.confidence - left.confidence);
 
@@ -203,13 +214,13 @@ export class BrowserChordInput implements AudioInput {
       const margin = bestMatch.confidence - (runnerUp?.confidence ?? 0);
       const now = Date.now();
       const confidenceFloor = Math.max(
-        0.72,
-        bestMatch.template.threshold - 0.05
+        0.69,
+        bestMatch.template.threshold - 0.07
       );
 
       if (
         bestMatch.confidence < confidenceFloor ||
-        margin < 0.015 ||
+        margin < 0.008 ||
         (lastChord === bestMatch.template.chordId && now - lastEmission < profile.debounceMs)
       ) {
         return;
