@@ -1,0 +1,364 @@
+:root {
+  color-scheme: dark;
+  --bg-top: #08283b;
+  --bg-bottom: #02131f;
+  --panel: rgba(8, 22, 34, 0.8);
+  --panel-border: rgba(255, 244, 224, 0.12);
+  --text: #fff7eb;
+  --muted: #c2d4de;
+  --accent: #ff8f3f;
+  --accent-soft: #ffd166;
+  --teal: #4ecdc4;
+  --pink: #f72585;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  font-family: "Avenir Next", "Trebuchet MS", "Gill Sans", sans-serif;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(78, 205, 196, 0.18), transparent 34%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+  color: var(--text);
+}
+
+body {
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.site-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.ambient {
+  position: absolute;
+  inset: auto;
+  border-radius: 999px;
+  filter: blur(18px);
+  opacity: 0.46;
+  animation: drift 14s ease-in-out infinite;
+}
+
+.ambient--one {
+  width: 340px;
+  height: 340px;
+  top: 10%;
+  left: -90px;
+  background: radial-gradient(circle, rgba(255, 143, 63, 0.45), transparent 70%);
+}
+
+.ambient--two {
+  width: 440px;
+  height: 440px;
+  right: -130px;
+  bottom: 4%;
+  background: radial-gradient(circle, rgba(78, 205, 196, 0.35), transparent 72%);
+  animation-delay: -7s;
+}
+
+.app-frame {
+  position: relative;
+  z-index: 1;
+  width: min(1160px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.hero-screen,
+.card-screen,
+.game-screen {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero-screen {
+  min-height: calc(100vh - 5rem);
+  grid-template-columns: 1.3fr 0.9fr;
+  align-items: center;
+}
+
+.hero-copy h1,
+.panel h2,
+.game-card h3 {
+  font-family: "Rockwell", "Georgia", serif;
+  line-height: 0.98;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.hero-copy h1 {
+  font-size: clamp(3.2rem, 8vw, 6.6rem);
+  max-width: 9ch;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--accent-soft);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+.lede {
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: 1.12rem;
+}
+
+.hero-actions,
+.section-header,
+.chip-row,
+.sample-row,
+.hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.2rem;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease,
+    background 160ms ease;
+}
+
+.button:hover:enabled {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background: linear-gradient(135deg, var(--accent), #ffb347);
+  color: #092130;
+  font-weight: 800;
+}
+
+.button--secondary,
+.button--ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.score-panel,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.score-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+}
+
+.score-tile,
+.score-note {
+  padding: 1.1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.score-tile span,
+.score-note span {
+  display: block;
+  color: var(--muted);
+}
+
+.score-tile strong,
+.score-note strong {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 2rem;
+}
+
+.score-note small {
+  color: var(--muted);
+}
+
+.panel {
+  padding: 1.4rem;
+}
+
+.panel--wide {
+  padding: 1.5rem;
+}
+
+.inline-note,
+.warning-card,
+.simple-list {
+  color: var(--muted);
+}
+
+.warning-card {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(247, 37, 133, 0.14);
+  border: 1px solid rgba(247, 37, 133, 0.24);
+}
+
+.simple-list {
+  padding-left: 1.1rem;
+}
+
+.chord-grid,
+.game-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.chord-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.game-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chord-card,
+.practice-card,
+.game-card {
+  padding: 1rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.practice-card {
+  min-height: 132px;
+}
+
+.practice-card--heard {
+  border-color: rgba(255, 209, 102, 0.7);
+  background: rgba(255, 209, 102, 0.14);
+}
+
+.field-label {
+  display: inline-block;
+  margin-bottom: 0.45rem;
+  color: var(--accent-soft);
+}
+
+.text-input {
+  width: 100%;
+  margin-bottom: 0.8rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(6, 18, 28, 0.65);
+  color: var(--text);
+}
+
+.sample-dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: transparent;
+}
+
+.sample-dot--filled {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.chord-chip,
+.practice-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, white 12%);
+  background: color-mix(in srgb, var(--chip-color) 16%, transparent);
+}
+
+.practice-pill {
+  margin-bottom: 0.8rem;
+  --pill-color: #4ecdc4;
+  border-color: color-mix(in srgb, var(--pill-color) 30%, white 12%);
+  background: color-mix(in srgb, var(--pill-color) 16%, transparent);
+}
+
+.hud-row {
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+.hud-row strong {
+  color: var(--text);
+}
+
+.game-canvas {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  display: block;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.game-canvas--wide {
+  max-width: 100%;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(18px, -18px, 0);
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-screen,
+  .game-grid,
+  .chord-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-screen {
+    min-height: auto;
+    padding-top: 1rem;
+  }
+
+  .hud-row {
+    justify-content: flex-start;
+  }
+}
