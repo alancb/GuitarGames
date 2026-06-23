@@ -312,9 +312,9 @@ export class App {
     const allReady = this.calibrationDraft.every((chord) => chord.samples.length >= 3);
     this.setView(`
       <section class="card-screen" data-screen="calibration">
-        <div class="panel panel--wide">
+        <div class="panel panel--wide panel--calibration">
           <div class="section-header">
-            <div>
+            <div class="section-heading">
               <p class="eyebrow">Step 2</p>
               <h2>Calibrate your four-chord control set</h2>
             </div>
@@ -325,7 +325,7 @@ export class App {
             ${this.calibrationDraft
               .map(
                 (chord, index) => `
-                  <article class="chord-card">
+                  <article class="chord-card chord-card--calibration">
                     <label class="field-label" for="chord-${index}">Chord ${index + 1}</label>
                     <input
                       id="chord-${index}"
@@ -347,7 +347,7 @@ export class App {
               )
               .join("")}
           </div>
-          <div class="hero-actions">
+          <div class="hero-actions hero-actions--form">
             <button class="button button--primary" data-action="finish" ${allReady ? "" : "disabled"}>
               Save Calibration
             </button>
